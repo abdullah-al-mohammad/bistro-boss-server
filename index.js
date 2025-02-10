@@ -1,5 +1,6 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
+var jwt = require('jsonwebtoken');
 const app = express()
 const cors = require('cors');
 require('dotenv').config()
@@ -32,19 +33,42 @@ async function run() {
     const cartCollection = client.db('bistroDb').collection('carts')
 
     // use info data
+    app.get('/users', async(req, res)=>{
+      const result = await userCollection.find().toArray()
+      res.send(result)
+    })
     app.post('/users', async(req, res) => {
       const user = req.body;
       // if user already have
-      const query = { email: user.email }
+      const query = {email: user.email}
       const existingUser = await userCollection.findOne(query)
-      if (existingUser) {
-        return res.send({message:'user already exist', insertedId: null})
+      if(existingUser){
+        return res.send({message: 'user already exist', insertedId: null})
       }
       const result = await userCollection.insertOne(user)
       res.send(result )
     })
 
-
+    // make a admin
+    app.patch('/users/admin/:id', (req,res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          role: 'admin'
+        }
+      }
+      
+      const result = userCollection.updateOne(filter, updatedDoc)
+    })
+    // delete user
+    app.delete('/users/:id', (req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = userCollection.deleteOne(query)
+      res.send(result)
+    })
+    // menu data
     app.get('/menu', async(req, res) => {
       const result = await menuCollection.find().toArray()
       res.send(result)
