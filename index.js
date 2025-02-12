@@ -76,7 +76,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users/admin/:email", async(req, res) => {
+    app.get("/users/admin/:email", verifyToken, async(req, res) => {
       const email= req.params.email
       if(email !== req.decoded.email){
         return res.status(403).send({message: 'forbidden access'})
@@ -113,6 +113,7 @@ async function run() {
       };
 
       const result = userCollection.updateOne(filter, updatedDoc);
+      res.send(result)
     });
     // delete user
     app.delete("/users/:id", verifyAdmin, verifyToken, (req, res) => {
@@ -126,6 +127,12 @@ async function run() {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
+
+    app.post("/menu", (req,res)=>{
+      const item = req.body;
+      const result = menuCollection.insertOne(item)
+      res.send(result)
+    })
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
